@@ -15,16 +15,27 @@ class DS18B20():
 		os.system('modprobe w1-gpio')
 		os.system('modprobe w1-therm')
 		base_dir = '/sys/bus/w1/devices/'
-		device_folder = glob.glob(base_dir + '28*')[0]
-		self.device_file = device_folder + '/w1_slave'
-		temperature = self.read_temp()	
-		self.min_temp = temperature
-		self.max_temp = temperature
+		self.device_file = []
+		self.min_temp = []
+		self.max_temp = []
+		folders = glob.glob(base_dir + '28*')
+		self.no_devices = len(folders)
+		print 'Found',self.no_devices, 'devices'
+		for dev in folders:
+			dev_file = dev + '/w1_slave'
+#			print dev_file
+			self.device_file.append(dev_file)
+#		print self.device_file
+		for i in range(self.no_devices):
+			temperature = self.read_temp(i)	
+			print i, temperature
+			self.min_temp.append(temperature)
+			self.max_temp.append(temperature)
 		self.logger.info('Temperature sensor initialised.')
 
-	def _read_temp_raw(self):
+	def _read_temp_raw(self, device):
 		try:
-			f = open(self.device_file, 'r')
+			f = open(self.device_file[device], 'r')
 			lines = f.readlines()
 			f.close()
 			return lines
@@ -32,11 +43,11 @@ class DS18B20():
 			self.logger.warning("Error reading device file")
 			return(' ')
 
-	def read_temp(self):
-		lines = self._read_temp_raw()
+	def read_temp(self, device):
+		lines = self._read_temp_raw(device)
 		while lines[0].strip()[-3:] != 'YES':
 			time.sleep(0.2)
-			lines = self.read_temp_raw()
+			lines = self._read_temp_raw(device)
 		equals_pos = lines[1].find('t=')
 		if equals_pos != -1:
 			temp_string = lines[1][equals_pos+2:]
@@ -47,20 +58,20 @@ class DS18B20():
 			self.logger.info('Temperature:'+str(temp_c))
 			return temp_c
 
-	def read_max_min_temp(self):
-		temperature = self.read_temp()
-		if temperature < self.min_temp:
-			self.min_temp = temperature
+	def read_max_min_temp(self, device):
+		temperature = self.read_temp(device)
+		if temperature < self.min_temp[device]:
+			self.min_temp[device] = temperature
 		if temperature != 85:
-			if temperature > self.max_temp:
-				self.max_temp = temperature
+			if temperature > self.max_temp[device]:
+				self.max_temp[device] = temperature
 		return(temperature)
 	
 if __name__ == "__main__":
 	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO)
 	logging.warning('Running DS18B20 as a standalone app.')
 	myReader = DS18B20()
-	print myReader.read_max_min_temp()
-	print 'min=',myReader.min_temp, 'max=',myReader.max_temp
+#	print myReader.read_max_min_temp()
+#	print 'min=',myReader.min_temp, 'max=',myReader.max_temp
 	
 	

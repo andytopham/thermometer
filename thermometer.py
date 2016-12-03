@@ -26,6 +26,7 @@ class Thermometer():
 		elif self.displaytype == 'uoled':
 			try:
 				import uoled
+				print 'Setting up uoled'
 				self.display = uoled.Screen()
 				self.display.writerow(0,'Thermometer')
 				self.display.writerow(2,'Getting ready')
@@ -104,7 +105,7 @@ class Thermometer():
 			self.flag = False
 	
 
-	def _update_display(self, temperature):
+	def _update_display(self, temperature, device):
 		if self.displaytype == 'oled':
 			if self.myAlarm.alarm_interval():		# if we should display anything
 				clock = time.strftime("%R")
@@ -126,12 +127,19 @@ class Thermometer():
 				else:
 					mystring1 = '.U{0:^16s}'.format(clock)				
 				mystring2 = '{1:2.1f}C {2:2.1f}C {3:2.1f}C  '.format(clock, 
-					self.myDS.min_temp, temperature, self.myDS.max_temp)
-				self.display.writerow(1,mystring1)
-				self.display.writerow(2,mystring2)
+					self.myDS.min_temp[device], temperature, self.myDS.max_temp[device])
+				if False:		# this is the small text output version
+					self.display.writerow(1,mystring1)
+					self.display.writerow(2+device,mystring2)
+				else:
+					mystring2 = '{0:2.1f}C        '.format(temperature)
+					mystringmax = '{0:2.1f}C      '.format(self.myDS.max_temp[device])
+					mystringmin = '{0:2.1f}C      '.format(self.myDS.min_temp[device])
+					self.display.write_temperatures(device, mystring2, mystringmax, mystringmin)				
 			else:
 				self.display.cleardisplay()
-		self._toggle_indicator()
+		if False:		# only do this if using small text
+			self._toggle_indicator()
 		return(0)
 		
 	def _log_temp(self, temperature):
@@ -152,25 +160,26 @@ class Thermometer():
 			print 'Error writing to cloud.'
 			self.display.writerow(1,' Cloud error')
 		else:
-			self.ubidots_error = False
+			self.cloud_error = False
 		return(0)
 	
 	def mainloop(self):
 		while True:
-			temperature = self.myDS.read_max_min_temp()	
-			if temperature == 85:
-				print 'Error: temperature = 85'
-				time.sleep(.5)
-				temperature = self.myDS.read_temp()	# try a second time
-			print 'Min=',self.myDS.min_temp,' Current=',temperature,' Max=',self.myDS.max_temp	
-#			self._log_temp(temperature)
-			if temperature == 85:
-				print 'Skipping because had poor sensor reading twice.'
-				self.display.writerow(1,'Bad sensor')
-#				sys.exit(0)			# if failed twice, then not worth carrying on.
-			else:
-				self._update_display(temperature)
-				self._cloud_log(temperature)
+			string = ''
+			for device in range(self.myDS.no_devices):
+				temperature = self.myDS.read_max_min_temp(device)	
+				if temperature == 85:
+					print 'Error: temperature = 85'
+					time.sleep(.5)
+					temperature = self.myDS.read_max_min_temp(device)	# try a second time
+				print 'Device=',device,'Min=',self.myDS.min_temp[device],' Current=',temperature,' Max=',self.myDS.max_temp[device]	
+				if temperature == 85:
+					print 'Skipping because had poor sensor reading twice.'
+					self.display.writerow(1,'Bad sensor')
+				else:
+					self._update_display(temperature,device)
+					string += str(device)+' '+str(temperature)+' '
+			self._cloud_log(string)
 			time.sleep(5)
 
 if __name__ == "__main__":

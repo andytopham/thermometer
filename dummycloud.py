@@ -10,10 +10,14 @@ class Mydummycloud():
 		self.logger = logging.getLogger(__name__)
 		self.logger.info('Dummy cloud initialised.')
 		self.cloud_interval = datetime.timedelta(minutes = interval)
+#		self.cloud_interval = datetime.timedelta(seconds = 10)
 		self.last_time = datetime.datetime.now()
+		self.fp = open(VALUEFILE,'w')	
+		self.fp.write('Dummy cloud writes\n')
+		self.fp.close
 
 	def _log_temp(self, temperature):
-		self.fp = open(VALUEFILE,'w')	
+		self.fp = open(VALUEFILE,'a')	
 		self.fp.write(str(temperature)+'\n')
 		self.fp.close
 		return(0)
@@ -23,9 +27,9 @@ class Mydummycloud():
 		if ((now - self.last_time) > self.cloud_interval):
 			self.last_time = now
 			try:
+				self._log_temp(val)
 				print 'Dummy cloud write:', val
 				self.logger.info('Write to dummycloud OK')
-				self._log_temp(val)
 			except:
 				self.logger.warning("Error saving to dummycloud. Value="+str(val))				
 				return(False)

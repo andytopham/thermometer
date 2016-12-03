@@ -28,6 +28,7 @@ class Screen:
 		self.MySsd = gaugette.ssd1306.SSD1306(reset_pin=RESET_PIN, dc_pin=DC_PIN)
 		self.MySsd.begin()
 		self.MySsd.clear_display()
+		self.font_size = 2		# = 1 for small font
 	
 	def scroll_text(self,rownumber,text):
 		''' So far just scrolls one row.'''
@@ -45,13 +46,21 @@ class Screen:
 		return(0)
 	
 	def writerow(self,rownumber,string):
-		self.MySsd.draw_text2(0,(rownumber)*ROW_HEIGHT,string,1)
+		self.MySsd.draw_text2(0,((rownumber)*ROW_HEIGHT)*self.font_size,string,self.font_size)
 		self.MySsd.display()
 		return(0)
 
 	def _writerow(self,rownumber,string):
 		self.MySsd.draw_text2(0,(rownumber)*ROW_HEIGHT,string,1)
 		return(0)
+	
+	def write_temperatures(self, rownumber, current, max, min):
+		self.MySsd.draw_text2(0,((rownumber)*ROW_HEIGHT)*self.font_size, current, self.font_size)
+		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size, max, 1)
+		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size + 8, min, 1)
+		self.MySsd.display()
+		return(0)
+	
 
 	def draw_blob(self,x,y):
 		self.MySsd.draw_pixel(x,y,True)
