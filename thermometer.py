@@ -28,9 +28,7 @@ class Thermometer():
 				import uoled
 				print 'Setting up uoled'
 				self.display = uoled.Screen()
-				self.display.writerow(0,'Thermometer')
-				self.display.writerow(2,'Getting ready')
-				self.display.writerow(3,' Min   Now   Max')
+#				self.display.writerow(0,'Thermometer')
 			except:
 				print 'Uoled failed init.'
 				self.logger.error('Uoled failed init.')
@@ -51,7 +49,7 @@ class Thermometer():
 			try:
 				import dummycloud
 				self.myCloud = dummycloud.Mydummycloud()
-				self.cloud_error = False
+				print 'Using dummy cloud'
 			except:
 				self.display.writerow(1,"Dummycloud failed init")
 				self.logger.error('Dummycloud failed init.')
@@ -60,7 +58,6 @@ class Thermometer():
 			try:
 				import myubidots
 				self.myCloud = myubidots.Myubidots()
-				self.cloud_error = False
 			except:
 				self.display.writerow(1,"Ubidots failed init")
 				self.logger.error('Ubidots failed init.')
@@ -69,7 +66,6 @@ class Thermometer():
 			try:
 				import mybeebotte
 				self.myCloud = mybeebotte.Mybeebotte()
-				self.cloud_error = False
 			except:
 				self.display.writerow(1,"Beebotte failed init")
 				self.logger.error('Beebotte failed init.')
@@ -78,7 +74,8 @@ class Thermometer():
 			self.logger.error('Cloud type not specified. Check keys file.')
 			print 'Cloud type not specified. Check keys file.'
 			sys.exit(0)			
-
+		self.cloud_error = False
+		
 		try:
 			self.myDS = DS18B20.DS18B20()
 		except:
@@ -89,21 +86,7 @@ class Thermometer():
 		self.mySystem = system.System()
 		hostname = self.mySystem.hostname()
 		self.display.writerow(2,hostname)
-		self.flag = False
-#		self.fp = open(VALUEFILE,'w')
-#		self.fp.write('Temperature values\n')
-#		self.fp.close()
-		self.log_counter = 0
-		self.display.writerow(1,"  Initialised     ")
-		
-	def _toggle_indicator(self):
-		if self.flag == False:
-			self.flag = True
-			self.display.writerow(1,' ')
-			return(0)
-		else:
-			self.flag = False
-	
+		self.log_counter = 0		
 
 	def _update_display(self, temperature, device):
 		if self.displaytype == 'oled':
@@ -119,67 +102,52 @@ class Thermometer():
 				self.display.writerow(2,mystring2)
 			else:
 				self.display.cleardisplay()
+			self._toggle_indicator()
 		if self.displaytype == 'uoled':
 			if self.myAlarm.alarm_interval():		# if we should display anything
-				clock = time.strftime("%R")
-				if self.cloud_error == False:
-					mystring1 = '.*{0:^16s}'.format(clock)
-				else:
-					mystring1 = '.U{0:^16s}'.format(clock)				
-				mystring2 = '{1:2.1f}C {2:2.1f}C {3:2.1f}C  '.format(clock, 
-					self.myDS.min_temp[device], temperature, self.myDS.max_temp[device])
-				if False:		# this is the small text output version
-					self.display.writerow(1,mystring1)
-					self.display.writerow(2+device,mystring2)
-				else:
-					mystring2 = '{0:2.1f}C        '.format(temperature)
-					mystringmax = '{0:2.1f}C      '.format(self.myDS.max_temp[device])
-					mystringmin = '{0:2.1f}C      '.format(self.myDS.min_temp[device])
-					self.display.write_temperatures(device, mystring2, mystringmax, mystringmin)				
+				self.display.write_temperatures(
+					device, temperature, self.myDS.max_temp[device], self.myDS.min_temp[device], self.cloud_error)				
 			else:
 				self.display.cleardisplay()
-		if False:		# only do this if using small text
-			self._toggle_indicator()
 		return(0)
 		
-	def _log_temp(self, temperature):
-		self.log_counter += 1
-		if self.log_counter > 12:
-			self.log_counter = 0
-			self.fp = open(VALUEFILE,'w')
-			self.fp.write(str(temperature)+'\n')
-			self.fp.close
-		return(0)
+#	def _log_temp(self, temperature):
+#		self.log_counter += 1
+#		if self.log_counter > 12:
+#			self.log_counter = 0
+#			self.fp = open(VALUEFILE,'w')
+#			self.fp.write(str(temperature)+'\n')
+#			self.fp.close
+#		return(0)
 		
-	def measure_temp(self):
-		return(0)
+#	def measure_temp(self):
+#		return(0)
 		
 	def _cloud_log(self, temperature):
 		if self.myCloud.write(temperature) == False:
-			self.cloud_error = True
 			print 'Error writing to cloud.'
-			self.display.writerow(1,' Cloud error')
+			return(True)
 		else:
-			self.cloud_error = False
-		return(0)
+			return(False)
 	
 	def mainloop(self):
 		while True:
-			string = ''
+			clock = time.strftime("%R")+' '
+			string = clock + ' '
 			for device in range(self.myDS.no_devices):
 				temperature = self.myDS.read_max_min_temp(device)	
 				if temperature == 85:
 					print 'Error: temperature = 85'
 					time.sleep(.5)
 					temperature = self.myDS.read_max_min_temp(device)	# try a second time
-				print 'Device=',device,'Min=',self.myDS.min_temp[device],' Current=',temperature,' Max=',self.myDS.max_temp[device]	
+				print clock,'Device=',device,'Min=',self.myDS.min_temp[device],' Current=',temperature,' Max=',self.myDS.max_temp[device]	
 				if temperature == 85:
 					print 'Skipping because had poor sensor reading twice.'
 					self.display.writerow(1,'Bad sensor')
 				else:
 					self._update_display(temperature,device)
 					string += str(device)+' '+str(temperature)+' '
-			self._cloud_log(string)
+			self.display.cloud_error = self._cloud_log(string)
 			time.sleep(5)
 
 if __name__ == "__main__":

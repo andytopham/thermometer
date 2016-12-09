@@ -29,7 +29,20 @@ class Screen:
 		self.MySsd.begin()
 		self.MySsd.clear_display()
 		self.font_size = 2		# = 1 for small font
-	
+		self.toggle = False
+		self.cloud_error = False
+		
+	def _toggle_indicator(self):
+		if self.toggle == False:
+			self.toggle = True
+#			self.display.writerow(1,' ')
+#			return(0)
+		else:
+			self.toggle = False
+#		self.MySsd.draw_pixel(127,30,self.toggle)
+		self.draw_blob(126,29,self.toggle)
+		self.MySsd.draw_pixel(127,31,self.cloud_error)
+		
 	def scroll_text(self,rownumber,text):
 		''' So far just scrolls one row.'''
 #		print 'Scrolling row number ',rownumber
@@ -54,28 +67,61 @@ class Screen:
 		self.MySsd.draw_text2(0,(rownumber)*ROW_HEIGHT,string,1)
 		return(0)
 	
-	def write_temperatures(self, rownumber, current, max, min):
-		self.MySsd.draw_text2(0,((rownumber)*ROW_HEIGHT)*self.font_size, current, self.font_size)
-		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size, max, 1)
-		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size + 8, min, 1)
+	def write_temperatures(self, rownumber, current, max, min, cloud_error):
+		current_string = '{0:2.1f}C  '.format(current)
+		max_string = '{0:2.1f}C    '.format(max)
+		min_string = '{0:2.1f}C    '.format(min)
+		self.MySsd.draw_text2(0,((rownumber)*ROW_HEIGHT)*self.font_size, current_string, self.font_size)
+		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size, max_string, 1)
+		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size + 8, min_string, 1)
+		self._toggle_indicator()
+		cloudx = 110
+		cloudy = 29
+#		cloud_error = True
+		self.draw_cloud(cloudx, cloudy, cloud_error)
+		clock = time.strftime("%R")
+		self.MySsd.draw_text2(100, 0, clock, 1)
+		self.MySsd.draw_text2(100, 8, '          ', 1)	# empty
 		self.MySsd.display()
 		return(0)
 	
+	def draw_cloud(self,x,y, state = True):
+#		self.MySsd.draw_pixel(x,y, state)
+		self.MySsd.draw_pixel(x+1,y, state)
+		self.MySsd.draw_pixel(x+2,y, state)
+		self.MySsd.draw_pixel(x+3,y, state)
+		self.MySsd.draw_pixel(x+4,y, state)
+		self.MySsd.draw_pixel(x+5,y, state)
+		self.MySsd.draw_pixel(x+6,y, state)
+		self.MySsd.draw_pixel(x+7,y, state)
+		self.MySsd.draw_pixel(x+8,y, state)
+		self.MySsd.draw_pixel(x+9,y, state)
+#		self.MySsd.draw_pixel(x+10,y, state)
+		self.MySsd.draw_pixel(x,y-1, state)
+		self.MySsd.draw_pixel(x+1,y-2, state)
+		self.MySsd.draw_pixel(x+2,y-2, state)
+		self.MySsd.draw_pixel(x+3,y-3, state)
+		self.MySsd.draw_pixel(x+4,y-4, state)
+		self.MySsd.draw_pixel(x+4,y-4, state)
+		self.MySsd.draw_pixel(x+5,y-4, state)
+		self.MySsd.draw_pixel(x+6,y-4, state)
+		self.MySsd.draw_pixel(x+7,y-3, state)
+		self.MySsd.draw_pixel(x+8,y-2, state)
+		self.MySsd.draw_pixel(x+9,y-2, state)
+		self.MySsd.draw_pixel(x+10,y-1, state)
+		return(0)
 
-	def draw_blob(self,x,y):
-		self.MySsd.draw_pixel(x,y,True)
-#		self.MySsd.draw_pixel(x+1,y,True)
-#		self.MySsd.draw_pixel(x,y+1,True)
-#		self.MySsd.draw_pixel(x+1,y+1,True)
+	def draw_blob(self,x,y, state = True):
+		self.MySsd.draw_pixel(x,y, state)
+		self.MySsd.draw_pixel(x+1,y, state)
+		self.MySsd.draw_pixel(x,y+1, state)
+		self.MySsd.draw_pixel(x+1,y+1, state)
 		return(0)
 		
-	def delete_blob(self,x,y):
-		self.MySsd.draw_pixel(x,y,False)
-#		self.MySsd.draw_pixel(x+1,y,True)
-#		self.MySsd.draw_pixel(x,y+1,True)
-#		self.MySsd.draw_pixel(x+1,y+1,True)
+	def cleardisplay(self):
+		self.MySsd.clear_display()
 		return(0)
-		
+				
 	def display(self):
 		self.MySsd.display()
 		return(0)
@@ -92,3 +138,4 @@ if __name__ == "__main__":
 	print 'Uoled test'		
 	MyScreen = Screen()
 	MyScreen.test()
+	
