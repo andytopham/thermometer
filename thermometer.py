@@ -49,6 +49,7 @@ class Thermometer():
 			try:
 				import dummycloud
 				self.myCloud = dummycloud.Mydummycloud()
+				self.display.cloud_type = 'file'
 				print 'Using dummy cloud'
 			except:
 				self.display.writerow(1,"Dummycloud failed init")
@@ -58,6 +59,7 @@ class Thermometer():
 			try:
 				import myubidots
 				self.myCloud = myubidots.Myubidots()
+				self.display.cloud_type = 'ubidots'
 			except:
 				self.display.writerow(1,"Ubidots failed init")
 				self.logger.error('Ubidots failed init.')
@@ -66,6 +68,7 @@ class Thermometer():
 			try:
 				import mybeebotte
 				self.myCloud = mybeebotte.Mybeebotte()
+				self.display.cloud_type = 'beebotte'
 			except:
 				self.display.writerow(1,"Beebotte failed init")
 				self.logger.error('Beebotte failed init.')
@@ -73,6 +76,7 @@ class Thermometer():
 		else:
 			self.logger.error('Cloud type not specified. Check keys file.')
 			print 'Cloud type not specified. Check keys file.'
+			self.display.cloud_type = 'no cloud'
 			sys.exit(0)			
 		self.cloud_error = False
 		

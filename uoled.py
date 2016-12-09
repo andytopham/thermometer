@@ -31,6 +31,7 @@ class Screen:
 		self.font_size = 2		# = 1 for small font
 		self.toggle = False
 		self.cloud_error = False
+		self.cloud_type = ''
 		
 	def _toggle_indicator(self):
 		if self.toggle == False:
@@ -75,42 +76,24 @@ class Screen:
 		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size, max_string, 1)
 		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size + 8, min_string, 1)
 		self._toggle_indicator()
-		cloudx = 110
+		cloudx = 100
 		cloudy = 29
 #		cloud_error = True
 		self.draw_cloud(cloudx, cloudy, cloud_error)
 		clock = time.strftime("%R")
 		self.MySsd.draw_text2(100, 0, clock, 1)
-		self.MySsd.draw_text2(100, 8, '          ', 1)	# empty
+		self.MySsd.draw_text2(100, 8, self.cloud_type, 1)	# empty
 		self.MySsd.display()
 		return(0)
 	
 	def draw_cloud(self,x,y, state = True):
-#		self.MySsd.draw_pixel(x,y, state)
-		self.MySsd.draw_pixel(x+1,y, state)
-		self.MySsd.draw_pixel(x+2,y, state)
-		self.MySsd.draw_pixel(x+3,y, state)
-		self.MySsd.draw_pixel(x+4,y, state)
-		self.MySsd.draw_pixel(x+5,y, state)
-		self.MySsd.draw_pixel(x+6,y, state)
-		self.MySsd.draw_pixel(x+7,y, state)
-		self.MySsd.draw_pixel(x+8,y, state)
-		self.MySsd.draw_pixel(x+9,y, state)
-#		self.MySsd.draw_pixel(x+10,y, state)
-		self.MySsd.draw_pixel(x,y-1, state)
-		self.MySsd.draw_pixel(x+1,y-2, state)
-		self.MySsd.draw_pixel(x+2,y-2, state)
-		self.MySsd.draw_pixel(x+3,y-3, state)
-		self.MySsd.draw_pixel(x+4,y-4, state)
-		self.MySsd.draw_pixel(x+4,y-4, state)
-		self.MySsd.draw_pixel(x+5,y-4, state)
-		self.MySsd.draw_pixel(x+6,y-4, state)
-		self.MySsd.draw_pixel(x+7,y-3, state)
-		self.MySsd.draw_pixel(x+8,y-2, state)
-		self.MySsd.draw_pixel(x+9,y-2, state)
-		self.MySsd.draw_pixel(x+10,y-1, state)
+		cloud = [(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),(11,0),(12,0),(13,0),(14,0),
+			(1,1),(0,2),(0,3),(1,4),(2,5),(3,5),(4,5),(4,6),(5,7),(6,8),(7,8),(8,8),
+			(9,8),(10,7),(11,6),(12,5),(13,5),(14,5),(15,4),(16,3),(16,2),(15,1)]
+		for coord in cloud:
+			self.MySsd.draw_pixel(x+coord[0],y-coord[1], state)
 		return(0)
-
+		
 	def draw_blob(self,x,y, state = True):
 		self.MySsd.draw_pixel(x,y, state)
 		self.MySsd.draw_pixel(x+1,y, state)
