@@ -18,6 +18,8 @@ ROW_HEIGHT = 8
 ROW_LENGTH = 20
 NO_OF_ROWS = 4
 
+MAX_X_AXIS = 25
+VALUEFILE = '/home/pi/master/thermometer/log/values.log'
 
 class Screen:
 	''' Class to control the micro oled based on the gaugette routines.
@@ -32,15 +34,14 @@ class Screen:
 		self.toggle = False
 		self.cloud_error = False
 		self.cloud_type = ''
+		self.max_x_axis = MAX_X_AXIS
+		self.state = 0
 		
 	def _toggle_indicator(self):
 		if self.toggle == False:
 			self.toggle = True
-#			self.display.writerow(1,' ')
-#			return(0)
 		else:
 			self.toggle = False
-#		self.MySsd.draw_pixel(127,30,self.toggle)
 		self.draw_blob(126,29,self.toggle)
 		self.MySsd.draw_pixel(127,31,self.cloud_error)
 		
@@ -68,13 +69,26 @@ class Screen:
 		self.MySsd.draw_text2(0,(rownumber)*ROW_HEIGHT,string,1)
 		return(0)
 	
-	def write_temperatures(self, rownumber, current, max, min, cloud_error):
-		current_string = '{0:2.1f}C  '.format(current)
-		max_string = '{0:2.1f}C    '.format(max)
-		min_string = '{0:2.1f}C    '.format(min)
-		self.MySsd.draw_text2(0,((rownumber)*ROW_HEIGHT)*self.font_size, current_string, self.font_size)
-		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size, max_string, 1)
-		self.MySsd.draw_text2(64,((rownumber)*ROW_HEIGHT)*self.font_size + 8, min_string, 1)
+	def write_temperatures(self, current, max, min, cloud_error, no_devices):
+		if self.state == 0:
+			self.text_temperatures(current, max, min, cloud_error, no_devices)
+		if self.state == 1:
+			self.draw_graph(self.process())
+		self.state = self.state + 1
+		if self.state > 1:
+			self.state = 0
+		return(0)
+	
+	def text_temperatures(self, current, max, min, cloud_error, no_devices):
+		print 'Text update'
+		self.cleardisplay()
+		for device in range(no_devices):
+			current_string = '{0:2.1f}C  '.format(current[device])
+			max_string = '{0:2.1f}C    '.format(max[device])
+			min_string = '{0:2.1f}C    '.format(min[device])
+			self.MySsd.draw_text2(0,((device)*ROW_HEIGHT)*self.font_size, current_string, self.font_size)
+			self.MySsd.draw_text2(64,((device)*ROW_HEIGHT)*self.font_size, max_string, 1)
+			self.MySsd.draw_text2(64,((device)*ROW_HEIGHT)*self.font_size + 8, min_string, 1)
 		self._toggle_indicator()
 		cloudx = 100
 		cloudy = 29
@@ -86,6 +100,39 @@ class Screen:
 		self.MySsd.display()
 		return(0)
 	
+	def draw_graph(self, data):
+		self.cleardisplay()
+		# draw axes
+		print 'Drawing graph'
+		for i in range(128):
+			self.MySsd.draw_pixel(i, self.max_x_axis, True)
+		for i in range(64):
+			self.MySsd.draw_pixel(0, i, True)
+		# label axes
+		self.MySsd.draw_text2(115, 0, str(self.max_x_axis), 1)		
+		# draw data
+		i = 0
+		for pt in data:
+			self.MySsd.draw_pixel(i, self.max_x_axis - pt, True)
+			i += 1
+		self.MySsd.display()
+		return(0)
+		
+	def process(self):
+		self.fp = open(VALUEFILE,'r')
+#		data = 'test'
+		sensor = []
+		data = self.fp.readline()		# discard title row
+		while data <> '':
+			data = self.fp.readline()
+			if data <> '':
+				data2 = data.split()
+				data3 = float(data2[2])
+#				print 'Output', data3
+				sensor.append(int(data3))
+		self.fp.close
+		return(sensor)
+		
 	def draw_cloud(self,x,y, state = True):
 		cloud = [(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),(11,0),(12,0),(13,0),(14,0),
 			(1,1),(0,2),(0,3),(1,4),(2,5),(3,5),(4,5),(4,6),(5,7),(6,8),(7,8),(8,8),

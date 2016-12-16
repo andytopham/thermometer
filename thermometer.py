@@ -91,8 +91,18 @@ class Thermometer():
 		hostname = self.mySystem.hostname()
 		self.display.writerow(2,hostname)
 		self.log_counter = 0		
+		self.cloud_counter = 0
 
-	def _update_display(self, temperature, device):
+	def _update_display(self, temperature):
+		clock = time.strftime("%R")+' '
+		string = clock + ' '
+		for dev in range(self.myDS.no_devices):
+			print clock,'Device=',dev,'Min=',self.myDS.min_temp[dev],' Current=',temperature[dev],' Max=',self.myDS.max_temp[dev]	
+			if temperature[dev] == 85:
+				print 'Skipping because had poor sensor reading twice.'
+				self.display.writerow(1,'Bad sensor')
+			else:
+				string += str(dev)+' '+str(temperature[dev])+' '
 		if self.displaytype == 'oled':
 			if self.myAlarm.alarm_interval():		# if we should display anything
 				clock = time.strftime("%R")
@@ -110,48 +120,41 @@ class Thermometer():
 		if self.displaytype == 'uoled':
 			if self.myAlarm.alarm_interval():		# if we should display anything
 				self.display.write_temperatures(
-					device, temperature, self.myDS.max_temp[device], self.myDS.min_temp[device], self.cloud_error)				
+					temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
 			else:
 				self.display.cleardisplay()
 		return(0)
 		
-#	def _log_temp(self, temperature):
-#		self.log_counter += 1
-#		if self.log_counter > 12:
-#			self.log_counter = 0
-#			self.fp = open(VALUEFILE,'w')
-#			self.fp.write(str(temperature)+'\n')
-#			self.fp.close
-#		return(0)
-		
-#	def measure_temp(self):
-#		return(0)
-		
-	def _cloud_log(self, temperature):
-		if self.myCloud.write(temperature) == False:
+	def _cloud_log(self, t):
+		self.cloud_counter += 1
+		print 'Cloud counter = ',self.cloud_counter
+		string = time.strftime("%R") + ' 0 ' + str(t[0]) + ' 1 ' + str(t[1])
+		if self.myCloud.write(string) == False:
 			print 'Error writing to cloud.'
 			return(True)
 		else:
 			return(False)
 	
+	def _draw_graph(self):
+		data = self.myCloud.read()
+		self.display.draw_graph(data)
+		return(0)
+	
+	def read_temperature(self, device):
+		temperature = self.myDS.read_max_min_temp(device)	
+		if temperature == 85:
+			print 'Error: temperature = 85'
+			time.sleep(.5)
+			temperature = self.myDS.read_max_min_temp(device)	# try a second time
+		return(temperature)
+	
 	def mainloop(self):
+		t = [None]*2
 		while True:
-			clock = time.strftime("%R")+' '
-			string = clock + ' '
 			for device in range(self.myDS.no_devices):
-				temperature = self.myDS.read_max_min_temp(device)	
-				if temperature == 85:
-					print 'Error: temperature = 85'
-					time.sleep(.5)
-					temperature = self.myDS.read_max_min_temp(device)	# try a second time
-				print clock,'Device=',device,'Min=',self.myDS.min_temp[device],' Current=',temperature,' Max=',self.myDS.max_temp[device]	
-				if temperature == 85:
-					print 'Skipping because had poor sensor reading twice.'
-					self.display.writerow(1,'Bad sensor')
-				else:
-					self._update_display(temperature,device)
-					string += str(device)+' '+str(temperature)+' '
-			self.display.cloud_error = self._cloud_log(string)
+				t[device] = self.read_temperature(device)
+			self.display.cloud_error = self._cloud_log(t)
+			self._update_display(t)
 			time.sleep(5)
 
 if __name__ == "__main__":

@@ -34,7 +34,17 @@ class Mydummycloud():
 				self.logger.warning("Error saving to dummycloud. Value="+str(val))				
 				return(False)
 		return(True)	
-		
+	
+	def read(self):
+		self.fp = open(VALUEFILE,'r')
+		data = 'test'
+		sensor = ''
+		while data <> '':
+			data = self.fp.readline()
+			sensor.append(data[2])
+		self.fp.close
+		return(sensor)
+	
 if __name__ == "__main__":
 	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO)
 	logging.warning('Running dummycloud as a standalone app.')
