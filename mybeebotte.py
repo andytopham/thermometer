@@ -5,47 +5,74 @@
 #$ sudo easy_install pip
 #$ sudo pip install beebotte
 
-from beebotte import *
+import beebotte
 import logging, datetime
 import keys
 
-LOGFILE = 'log/mybeebotte.log'
+LOGFILE = 'log/beebotte.log'
 
 class Mybeebotte():
-	def __init__(self, interval = 2):	# default data interval is 2 mins
+	def __init__(self, interval = 2, no_sensors = 1):	# default data interval is 2 mins
 		self.logger = logging.getLogger(__name__)
+		self.logger.info('Beebotte init starting.')
+		print 'Beebotte setting up. Interval:', interval, ' Sensors:', no_sensors
 		try:
-			api = BBT(keys.beebotte_api_key, keys.beebotte_secret_key)
-			self.test_variable = Resource(api,keys.beebotte_channel,keys.beebotte_variable)
-#			self.test_variable = api.get_variable(keys.ubidots_bench_variable_key)
+			api = beebotte.BBT(keys.beebotte_api_key, keys.beebotte_secret_key)
+			self.test_variable = beebotte.Resource(api,keys.beebotte_channel,keys.beebotte_variable)
+			if no_sensors == 2:
+				self.test_variable2 = beebotte.Resource(api,keys.beebotte_channel,keys.beebotte_variable2)
 			self.logger.info('Beebotte initialised.')
 		except:
 			self.logger.error('Beebotte failed to initialise.')
-		self.ubidots_interval = datetime.timedelta(minutes = interval)
+		self.beebotte_interval = datetime.timedelta(minutes = interval)
 		self.last_time = datetime.datetime.now()
-		
-	def write(self, val):
+	
+	def _process(self, string):
+		output = []
+		data = string.split()
+		data1 = float(data[2])
+		output.append(data1)
+		data2 = float(data[4])
+		output.append(data2)		
+#		print 'Returning', output, 'with length', len(output)
+		return(output) 
+
+	def write(self, string):
 		now = datetime.datetime.now()
-		if ((now - self.last_time) > self.ubidots_interval):
+		if ((now - self.last_time) > self.beebotte_interval):
 			self.last_time = now
-			try:
-				self.test_variable.write(val)
-#				self.logger.info('Write to beebotte:'+now.strftime('%H:%M'))
-				self.logger.info('Write to beebotte OK')
-			except:
-				self.logger.warning("Error saving to beebotte. Value="+str(val))				
-				return(False)
+			data_pts = self._process(string)
+			if len(data_pts) == 1:
+				try:
+					self.test_variable.write(data_pts[0])
+					self.logger.info('Write to beebotte OK')
+				except:
+					self.logger.warning("Error saving to beebotte. Value="+str(data_pts[0]))				
+					return(False)
+			if len(data_pts) == 2:
+				try:
+					self.test_variable.write(data_pts[0])
+					self.test_variable2.write(data_pts[1])
+					self.logger.info('Write to beebotte OK')
+				except:
+					self.logger.warning("Error saving to beebotte. Value="+str(data_pts[0]))				
+					return(False)
 		return(True)
 
-	def read(self):
+	def read(self, count = 1):
 		bee = self.test_variable.read(limit = 1)[0]
-		return(bee['data'])
+#		print 'Bee', bee
+		if count == 1:
+			return(bee['data'])
+		if count == 2:
+			bee1 = self.test_variable2.read(limit = 1)[0]
+			return(bee['data'], bee1['data'])
 	
 if __name__ == "__main__":
 	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO)
 	logging.warning('Running mybeebotte as a standalone app.')
 	print 'Writing test value to beebotte and reading it back.'
-	myBeebotte = Mybeebotte(0)	# Beware!!! Writes with each write call.
-	myBeebotte.write(11)		# Test value
-	print 'Wrote value 12'
-	print 'Read:', myBeebotte.read()
+	myBeebotte = Mybeebotte(interval = 0, no_sensors = 2)	# Beware!!! Writes with each write call.
+	myBeebotte.write('16:15 0 10.5 1 12.5')		# Test value
+	print 'Wrote'
+	print 'Read:', myBeebotte.read(2)

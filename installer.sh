@@ -21,3 +21,4 @@ cd ..
 apt-get -y install python-dev
 echo '** Installing wiringpi2 (needed for gaugette) **'
 pip install wiringpi2
+pip install beebotte

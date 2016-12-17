@@ -60,6 +60,7 @@ class Thermometer():
 				import myubidots
 				self.myCloud = myubidots.Myubidots()
 				self.display.cloud_type = 'ubidots'
+				print 'Ubidots cloud'
 			except:
 				self.display.writerow(1,"Ubidots failed init")
 				self.logger.error('Ubidots failed init.')
@@ -67,8 +68,9 @@ class Thermometer():
 		elif self.cloud == 'beebotte':
 			try:
 				import mybeebotte
-				self.myCloud = mybeebotte.Mybeebotte()
+				self.myCloud = mybeebotte.Mybeebotte(interval = 2, no_sensors = 2)
 				self.display.cloud_type = 'beebotte'
+				print 'Beebotte cloud'
 			except:
 				self.display.writerow(1,"Beebotte failed init")
 				self.logger.error('Beebotte failed init.')
@@ -97,12 +99,13 @@ class Thermometer():
 		clock = time.strftime("%R")+' '
 		string = clock + ' '
 		for dev in range(self.myDS.no_devices):
-			print clock,'Device=',dev,'Min=',self.myDS.min_temp[dev],' Current=',temperature[dev],' Max=',self.myDS.max_temp[dev]	
+#			print clock,'Device=',dev,'Min=',self.myDS.min_temp[dev],' Current=',temperature[dev],' Max=',self.myDS.max_temp[dev]	
 			if temperature[dev] == 85:
 				print 'Skipping because had poor sensor reading twice.'
 				self.display.writerow(1,'Bad sensor')
 			else:
 				string += str(dev)+' '+str(temperature[dev])+' '
+		print string
 		if self.displaytype == 'oled':
 			if self.myAlarm.alarm_interval():		# if we should display anything
 				clock = time.strftime("%R")
@@ -127,8 +130,8 @@ class Thermometer():
 		
 	def _cloud_log(self, t):
 		self.cloud_counter += 1
-		print 'Cloud counter = ',self.cloud_counter
-		string = time.strftime("%R") + ' 0 ' + str(t[0]) + ' 1 ' + str(t[1])
+#		print 'Cloud counter = ',self.cloud_counter
+		string = time.strftime("%R") + ' 0 ' + str(t[1]) + ' 1 ' + str(t[0])
 		if self.myCloud.write(string) == False:
 			print 'Error writing to cloud.'
 			return(True)

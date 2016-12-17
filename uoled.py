@@ -80,7 +80,7 @@ class Screen:
 		return(0)
 	
 	def text_temperatures(self, current, max, min, cloud_error, no_devices):
-		print 'Text update'
+#		print 'Text update'
 		self.cleardisplay()
 		for device in range(no_devices):
 			current_string = '{0:2.1f}C  '.format(current[device])
@@ -103,7 +103,7 @@ class Screen:
 	def draw_graph(self, data):
 		self.cleardisplay()
 		# draw axes
-		print 'Drawing graph'
+#		print 'Drawing graph'
 		for i in range(128):
 			self.MySsd.draw_pixel(i, self.max_x_axis, True)
 		for i in range(64):

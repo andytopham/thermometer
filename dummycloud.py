@@ -23,6 +23,7 @@ class Mydummycloud():
 		return(0)
 		
 	def write(self, val):
+		'''Write a string to stdout'''
 		now = datetime.datetime.now()
 		if ((now - self.last_time) > self.cloud_interval):
 			self.last_time = now
