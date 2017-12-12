@@ -6,8 +6,8 @@ apt-get -y install build-essential python-imaging
 pip install logging ubidots RPi.GPIO
 mkdir log
 echo 'Setting up sensor comms.'
-modprobe w1-gpio
-modprobe w1-therm
+echo 'dtoverlay=w1-gpio' >> /boot/config.txt
+
 echo 'Installing adafruit SSD1306'
 git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
 cd Adafruit_Python_SSD1306
@@ -20,5 +20,14 @@ cd fonts
 curl -sL https://github.com/chrissimpkins/Hack/releases/download/v2.018/Hack-v2_018-ttf.tar.gz | tar xz
 cd /home/pi
 
-echo 'Need to enable DS sensors by editing /boot/config.txt'
-echo 'Instructions on adafruit website'
+echo 'Setting up systemd service for autostart'
+cp /home/pi/master/thermometer/startthermometer.service /lib/systemd/system
+chmod 644 /lib/systemd/system/startthermometer.service
+systemctl daemon-reload
+systemctl enable startthermometer.service
+
+echo 'And need to reboot'
+
+# These two lines needed after reboot, but can probably be in the code.
+# modprobe w1-gpio
+# modprobe w1-therm

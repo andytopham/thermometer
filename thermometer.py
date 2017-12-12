@@ -100,7 +100,7 @@ class Thermometer():
 		self.log_counter = 0		
 		self.cloud_counter = 0
 		self.display.writerow(TITLE_ROW, 'Thermometer')
-		self.display.writerow(LABELS_ROW, 'Min  Now  Max  ')
+		self.display.writerow(LABELS_ROW, 'Min   Now   Max  ')
 
 	def _update_display(self, temperature):
 		clock = time.strftime("%R")+' '
