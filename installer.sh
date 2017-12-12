@@ -1,24 +1,24 @@
 #!/bin/sh
 echo "****** andyt installer for thermometer **********"
 apt-get update
-apt-get -y install python-dev python-smbus python-setuptools
-pip install logging ubidots
+apt-get -y install python-dev python-smbus python-setuptools python-pip
+apt-get -y install build-essential python-imaging
+pip install logging ubidots RPi.GPIO
 mkdir log
 echo 'Setting up sensor comms.'
 modprobe w1-gpio
 modprobe w1-therm
-echo '** Installing gaugette **'
-git clone git://github.com/guyc/py-gaugette.git
-cd py-gaugette
-python setup.py install
-cd ..
-git clone git://git.drogon.net/wiringPi
-cd wiringPi
-git pull origin
-./build
-cd ..
-# next one is needed for wiringpi2
-apt-get -y install python-dev
-echo '** Installing wiringpi2 (needed for gaugette) **'
-pip install wiringpi2
-pip install beebotte
+echo 'Installing adafruit SSD1306'
+git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
+cd Adafruit_Python_SSD1306
+sudo python setup.py install
+
+echo 'Fetching fonts'
+cd /home/pi/master
+mkdir fonts
+cd fonts
+curl -sL https://github.com/chrissimpkins/Hack/releases/download/v2.018/Hack-v2_018-ttf.tar.gz | tar xz
+cd /home/pi
+
+echo 'Need to enable DS sensors by editing /boot/config.txt'
+echo 'Instructions on adafruit website'

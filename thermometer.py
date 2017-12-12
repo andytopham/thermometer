@@ -9,6 +9,11 @@ import keys
  
 LOGFILE = '/home/pi/master/thermometer/log/thermometer.log'
 VALUEFILE = '/home/pi/master/thermometer/log/values.log'
+TITLE_ROW = 0
+LABELS_ROW = 1
+VALUES_ROW = 2
+STATUS_ROW = 4
+VALUES_ROW2 = 3
 
 class Thermometer():
 	def __init__(self):
@@ -19,16 +24,16 @@ class Thermometer():
 			try:
 				import oled
 				self.display = oled.Oled()
-				self.display.writerow(1,"Starting up")
+				self.display.writerow(TITLE_ROW,"Starting up")
 			except:
 				self.logger.error('Oled failed init.')
 				sys.exit(0)
 		elif self.displaytype == 'uoled':
 			try:
-				import uoled
+				import uoledada
 				print 'Setting up uoled'
-				self.display = uoled.Screen()
-#				self.display.writerow(0,'Thermometer')
+				self.display = uoledada.Screen()
+#				self.display.writerow(TITLE_ROW,'Thermometer')
 			except:
 				print 'Uoled failed init.'
 				self.logger.error('Uoled failed init.')
@@ -72,7 +77,7 @@ class Thermometer():
 				self.display.cloud_type = 'beebotte'
 				print 'Beebotte cloud'
 			except:
-				self.display.writerow(1,"Beebotte failed init")
+				self.display.writerow(TITLE_ROW,"Beebotte failed init")
 				self.logger.error('Beebotte failed init.')
 				sys.exit(0)
 		else:
@@ -91,9 +96,11 @@ class Thermometer():
 		self.myAlarm = alarm.Alarm()
 		self.mySystem = system.System()
 		hostname = self.mySystem.hostname()
-		self.display.writerow(2,hostname)
+		self.display.writerow(STATUS_ROW,hostname)
 		self.log_counter = 0		
 		self.cloud_counter = 0
+		self.display.writerow(TITLE_ROW, 'Thermometer')
+		self.display.writerow(LABELS_ROW, 'Min  Now  Max  ')
 
 	def _update_display(self, temperature):
 		clock = time.strftime("%R")+' '
@@ -102,7 +109,7 @@ class Thermometer():
 #			print clock,'Device=',dev,'Min=',self.myDS.min_temp[dev],' Current=',temperature[dev],' Max=',self.myDS.max_temp[dev]	
 			if temperature[dev] == 85:
 				print 'Skipping because had poor sensor reading twice.'
-				self.display.writerow(1,'Bad sensor')
+				self.display.writerow(TITLE_ROW,'Bad sensor')
 			else:
 				string += str(dev)+' '+str(temperature[dev])+' '
 		print string
@@ -115,17 +122,24 @@ class Thermometer():
 					mystring1 = '.U{0:^16s}'.format(clock)				
 				mystring2 = '{1:2.1f}C {2:2.1f}C {3:2.1f}C  '.format(clock, 
 					self.myDS.min_temp, temperature, self.myDS.max_temp)
-				self.display.writerow(1,mystring1)
-				self.display.writerow(2,mystring2)
+				self.display.writerow(STATUS_ROW,mystring1)
+				self.display.writerow(VALUES_ROW,mystring2)
 			else:
 				self.display.cleardisplay()
 			self._toggle_indicator()
 		if self.displaytype == 'uoled':
 			if self.myAlarm.alarm_interval():		# if we should display anything
-				self.display.write_temperatures(
-					temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
+				self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
 			else:
 				self.display.cleardisplay()
+		return(0)
+		
+	def write_temperatures(self, temperature, max, min, cloud, num_devs):
+		string = '{0:2.1f}C {1:2.1f}C {2:2.1f}C  '.format(min[0], temperature[0], max[0])
+		self.display.writerow(VALUES_ROW, string)
+		if num_devs > 1:
+			string = '{0:2.1f}C {1:2.1f}C {2:2.1f}C  '.format(min[1], temperature[1], max[1])
+			self.display.writerow(VALUES_ROW2, string)			
 		return(0)
 		
 	def _cloud_log(self, t):
