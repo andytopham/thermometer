@@ -129,7 +129,8 @@ class Thermometer():
 			self._toggle_indicator()
 		if self.displaytype == 'uoled':
 			if self.myAlarm.alarm_interval():		# if we should display anything
-				self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
+#				self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
+				self.write_single_temperature(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
 			else:
 				self.display.cleardisplay()
 		return(0)
@@ -137,6 +138,16 @@ class Thermometer():
 	def write_temperatures(self, temperature, max, min, cloud, num_devs):
 		string = '{0:2.1f}C {1:2.1f}C {2:2.1f}C  '.format(min[0], temperature[0], max[0])
 		self.display.writerow(VALUES_ROW, string)
+		if num_devs > 1:
+			string = '{0:2.1f}C {1:2.1f}C {2:2.1f}C  '.format(min[1], temperature[1], max[1])
+			self.display.writerow(VALUES_ROW2, string)			
+		return(0)
+		
+	def write_single_temperature(self, temperature, max, min, cloud, num_devs):
+		string = '{0:2.1f}C '.format(temperature[0])
+		self.display.writerow(TITLE_ROW, string)
+		string = ""
+		self.display.writerow(LABELS_ROW, string)
 		if num_devs > 1:
 			string = '{0:2.1f}C {1:2.1f}C {2:2.1f}C  '.format(min[1], temperature[1], max[1])
 			self.display.writerow(VALUES_ROW2, string)			
