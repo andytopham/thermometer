@@ -4,6 +4,8 @@ apt-get update
 apt-get -y install python-dev python-smbus python-setuptools python-pip
 apt-get -y install build-essential python-imaging
 pip install logging ubidots RPi.GPIO
+pip install beebotte
+
 mkdir log
 echo 'Setting up sensor comms.'
 echo 'dtoverlay=w1-gpio' >> /boot/config.txt

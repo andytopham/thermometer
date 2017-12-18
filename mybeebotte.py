@@ -72,7 +72,7 @@ if __name__ == "__main__":
 	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO)
 	logging.warning('Running mybeebotte as a standalone app.')
 	print 'Writing test value to beebotte and reading it back.'
-	myBeebotte = Mybeebotte(interval = 0, no_sensors = 2)	# Beware!!! Writes with each write call.
+	myBeebotte = Mybeebotte(interval = 1, no_sensors = 2)	# Beware!!! Writes with each write call.
 	myBeebotte.write('16:15 0 10.5 1 12.5')		# Test value
 	print 'Wrote'
 	print 'Read:', myBeebotte.read(2)

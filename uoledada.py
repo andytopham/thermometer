@@ -22,6 +22,7 @@ DC_PIN    = 15
 # ROW_HEIGHT = 8
 # CHAR_HEIGHT = 12
 CHAR_HEIGHT = 40
+SMALL_HEIGHT = 8
 ROW_SPACE = 4
 # ROW_SPACE = 8
 ROW_HEIGHT = CHAR_HEIGHT + ROW_SPACE
@@ -55,6 +56,7 @@ class Screen:
 		# Some other nice fonts to try: http://www.dafont.com/bitmap.php
 # 		self.font = ImageFont.truetype(PATH+'fonts/Hack-BoldItalic.ttf', 25)
 		self.font = ImageFont.truetype(PATH+'fonts/Hack-BoldItalic.ttf', CHAR_HEIGHT)
+		self.fontsmall = ImageFont.truetype(PATH+'fonts/Hack-BoldItalic.ttf', SMALL_HEIGHT)
 		# Write two lines of text.
 		x = 2
 		top = 2
@@ -102,9 +104,13 @@ class Screen:
 		self.draw.rectangle((0,height,width,height+ROW_HEIGHT), outline=0, fill=0)	
 		return(0)
 
-	def writerow(self,rownumber,string):
+	def writerow(self,rownumber, string, fontsize="normal"):
 		self.clear_row(rownumber)
-		self.draw.text((2,(rownumber)*ROW_HEIGHT), string, font=self.font, fill=255)
+		if fontsize == "normal":
+			thisfont=self.font
+		else:
+			thisfont=self.fontsmall
+		self.draw.text((2,(rownumber)*ROW_HEIGHT), string, font=thisfont, fill=255)
 #		self.draw.text((2, 2), string, font=self.font, fill=255)
 		self.display()
 		return(0)
