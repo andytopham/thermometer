@@ -147,11 +147,11 @@ class Thermometer():
 	def write_single_temperature(self, temperature, max, min, cloud, num_devs):
 		string = '{0:2.1f}C '.format(temperature[0])
 		self.display.writerow(TITLE_ROW, string)
-		string = "Cloud = "+self.cloud
+		string = "Cloud = "+self.cloud+time.strftime(" %R ")
 		self.display.writerow(LABELS_ROW, string, fontsize="small")
-		if num_devs > 1:
-			string = '{0:2.1f}C {1:2.1f}C {2:2.1f}C  '.format(min[1], temperature[1], max[1])
-			self.display.writerow(VALUES_ROW2, string)			
+#		if num_devs > 1:
+#			string = '{0:2.1f}C {1:2.1f}C {2:2.1f}C  '.format(min[1], temperature[1], max[1])
+#			self.display.writerow(VALUES_ROW2, string)			
 		return(0)
 		
 	def _cloud_log(self, t):
