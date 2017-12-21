@@ -28,6 +28,8 @@ chmod 644 /lib/systemd/system/startthermometer.service
 systemctl daemon-reload
 systemctl enable startthermometer.service
 
+cat "dtoverlay=w1-gpio,gpiopin=4,pullup=on" >> /boot/config.txt
+
 echo 'And need to reboot'
 
 # These two lines needed after reboot, but can probably be in the code.

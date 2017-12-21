@@ -30,13 +30,23 @@ class Thermometer():
 				sys.exit(0)
 		elif self.displaytype == 'uoled':
 			try:
-				import uoledada
+				import uoled
 				print 'Setting up uoled'
-				self.display = uoledada.Screen()
+				self.display = uoled.Screen()
 #				self.display.writerow(TITLE_ROW,'Thermometer')
 			except:
 				print 'Uoled failed init.'
 				self.logger.error('Uoled failed init.')
+				sys.exit(0)
+		elif self.displaytype == 'uoledi2c':
+			try:
+				import uoledi2c
+				print 'Setting up uoledi2c'
+				self.display = uoledi2c.Screen()
+#				self.display.writerow(TITLE_ROW,'Thermometer')
+			except:
+				print 'Uoledi2c failed init.'
+				self.logger.error('Uoledi2c failed init.')
 				sys.exit(0)
 		elif self.displaytype == '7seg':
 			try:
@@ -73,7 +83,7 @@ class Thermometer():
 		elif self.cloud == 'beebotte':
 			try:
 				import mybeebotte
-				self.myCloud = mybeebotte.Mybeebotte(interval = 2, no_sensors = 2)
+				self.myCloud = mybeebotte.Mybeebotte(interval = 2, no_sensors = 1)
 				self.display.cloud_type = 'beebotte'
 				print 'Beebotte cloud'
 			except:
@@ -128,7 +138,7 @@ class Thermometer():
 			else:
 				self.display.cleardisplay()
 			self._toggle_indicator()
-		if self.displaytype == 'uoled':
+		if self.displaytype == 'uoled' or self.displaytype == 'uoledi2c':
 			if self.myAlarm.alarm_interval():		# if we should display anything
 #				self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
 				self.write_single_temperature(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
