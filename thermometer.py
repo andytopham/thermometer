@@ -14,6 +14,7 @@ LABELS_ROW = 1
 VALUES_ROW = 2
 STATUS_ROW = 4
 VALUES_ROW2 = 3
+BEEBOTTE_INTERVAL = 60
 
 class Thermometer():
 	def __init__(self):
@@ -33,17 +34,24 @@ class Thermometer():
 				import uoled
 				print 'Setting up uoled'
 				self.display = uoled.Screen()
-#				self.display.writerow(TITLE_ROW,'Thermometer')
 			except:
 				print 'Uoled failed init.'
 				self.logger.error('Uoled failed init.')
+				sys.exit(0)
+		elif self.displaytype == 'uoledada':
+			try:
+				import uoledada
+				print 'Setting up uoledada'
+				self.display = uoledada.Screen()
+			except:
+				print 'Uoledada failed init.'
+				self.logger.error('Uoledada failed init.')
 				sys.exit(0)
 		elif self.displaytype == 'uoledi2c':
 			try:
 				import uoledi2c
 				print 'Setting up uoledi2c'
 				self.display = uoledi2c.Screen()
-#				self.display.writerow(TITLE_ROW,'Thermometer')
 			except:
 				print 'Uoledi2c failed init.'
 				self.logger.error('Uoledi2c failed init.')
@@ -83,7 +91,7 @@ class Thermometer():
 		elif self.cloud == 'beebotte':
 			try:
 				import mybeebotte
-				self.myCloud = mybeebotte.Mybeebotte(interval = 2, no_sensors = 1)
+				self.myCloud = mybeebotte.Mybeebotte(interval = BEEBOTTE_INTERVAL, no_sensors = 1)
 				self.display.cloud_type = 'beebotte'
 				print 'Beebotte cloud'
 			except:
@@ -165,13 +173,18 @@ class Thermometer():
 		return(0)
 		
 	def _cloud_log(self, t):
-		self.cloud_counter += 1
+#		self.cloud_counter += 1
 #		print 'Cloud counter = ',self.cloud_counter
-		string = time.strftime("%R") + ' 0 ' + str(t[1]) + ' 1 ' + str(t[0])
+		if self.myDS.no_devices == 1:
+			string = time.strftime("%R") + ' 0 ' + str(t[0])
+		else:
+			string = time.strftime("%R") + ' 0 ' + str(t[1]) + ' 1 ' + str(t[0])
 		if self.myCloud.write(string) == False:
 			print 'Error writing to cloud.'
+			self.display.writerow(LABELS_ROW, 'Error writing to cloud', fontsize='small')
 			return(True)
 		else:
+			print 'Wrote to cloud: ', string
 			return(False)
 	
 	def _draw_graph(self):

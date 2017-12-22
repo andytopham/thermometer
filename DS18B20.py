@@ -20,12 +20,10 @@ class DS18B20():
 		self.max_temp = []
 		folders = glob.glob(base_dir + '28*')
 		self.no_devices = len(folders)
-		print 'Found',self.no_devices, 'devices'
+		print 'Found ',self.no_devices, ' DS18B20 devices'
 		for dev in folders:
 			dev_file = dev + '/w1_slave'
-#			print dev_file
 			self.device_file.append(dev_file)
-#		print self.device_file
 		for i in range(self.no_devices):
 			temperature = self.read_temp(i)	
 			print i, temperature

@@ -21,10 +21,11 @@ class Mybeebotte():
 			self.test_variable = beebotte.Resource(api,keys.beebotte_channel,keys.beebotte_variable)
 			if no_sensors == 2:
 				self.test_variable2 = beebotte.Resource(api,keys.beebotte_channel,keys.beebotte_variable2)
-			self.logger.info('Beebotte initialised.')
+			self.logger.info('Beebotte initialised. Interval:'+str(interval)+' Sensors:', str(no_sensors))
 		except:
 			self.logger.error('Beebotte failed to initialise.')
 		self.beebotte_interval = datetime.timedelta(minutes = interval)
+		self.no_sensors = no_sensors
 		self.last_time = datetime.datetime.now()
 	
 	def _process(self, string):
@@ -32,8 +33,9 @@ class Mybeebotte():
 		data = string.split()
 		data1 = float(data[2])
 		output.append(data1)
-		data2 = float(data[4])
-		output.append(data2)		
+		if self.no_sensors == 2:
+			data2 = float(data[4])
+			output.append(data2)		
 #		print 'Returning', output, 'with length', len(output)
 		return(output) 
 
@@ -72,7 +74,7 @@ if __name__ == "__main__":
 	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO)
 	logging.warning('Running mybeebotte as a standalone app.')
 	print 'Writing test value to beebotte and reading it back.'
-	myBeebotte = Mybeebotte(interval = 1, no_sensors = 2)	# Beware!!! Writes with each write call.
+	myBeebotte = Mybeebotte(interval = 1, no_sensors = 2)	# Beware!!! Writes every minute.
 	myBeebotte.write('16:15 0 10.5 1 12.5')		# Test value
 	print 'Wrote'
 	print 'Read:', myBeebotte.read(2)
