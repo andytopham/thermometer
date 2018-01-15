@@ -15,6 +15,7 @@ VALUES_ROW = 2
 STATUS_ROW = 4
 VALUES_ROW2 = 3
 BEEBOTTE_INTERVAL = 60
+BIG_TEXT = True
 
 class Thermometer():
 	def __init__(self):
@@ -125,7 +126,6 @@ class Thermometer():
 		clock = time.strftime("%R")+' '
 		string = clock + ' '
 		for dev in range(self.myDS.no_devices):
-#			print clock,'Device=',dev,'Min=',self.myDS.min_temp[dev],' Current=',temperature[dev],' Max=',self.myDS.max_temp[dev]	
 			if temperature[dev] == 85:
 				print 'Skipping because had poor sensor reading twice.'
 				self.display.writerow(TITLE_ROW,'Bad sensor')
@@ -146,10 +146,12 @@ class Thermometer():
 			else:
 				self.display.cleardisplay()
 			self._toggle_indicator()
-		if self.displaytype == 'uoled' or self.displaytype == 'uoledi2c':
+		elif self.displaytype == 'uoled' or self.displaytype == 'uoledi2c':
 			if self.myAlarm.alarm_interval():		# if we should display anything
-#				self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
-				self.write_single_temperature(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
+				if BIG_TEXT:
+					self.write_single_temperature(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
+				else:
+					self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
 			else:
 				self.display.cleardisplay()
 		return(0)

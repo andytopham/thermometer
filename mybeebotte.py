@@ -10,9 +10,10 @@ import logging, datetime
 import keys
 
 LOGFILE = 'log/beebotte.log'
+DEFAULT_INTERVAL = 2		# minutes
 
 class Mybeebotte():
-	def __init__(self, interval = 2, no_sensors = 1):	# default data interval is 2 mins
+	def __init__(self, interval = DEFAULT_INTERVAL, no_sensors = 1):
 		self.logger = logging.getLogger(__name__)
 		self.logger.info('Beebotte init starting.')
 		print 'Beebotte setting up. Interval:', interval, ' Sensors:', no_sensors
@@ -22,6 +23,7 @@ class Mybeebotte():
 			if no_sensors == 2:
 				self.test_variable2 = beebotte.Resource(api,keys.beebotte_channel,keys.beebotte_variable2)
 			self.logger.info('Beebotte initialised. Interval:'+str(interval)+' Sensors:', str(no_sensors))
+			self.logger.info('Beebotte channel: '+keys.beebotte_channel+' variables: '+keys.beebotte_variable+' '+keys.beebotte_variable2)
 		except:
 			self.logger.error('Beebotte failed to initialise.')
 		self.beebotte_interval = datetime.timedelta(minutes = interval)
@@ -36,10 +38,10 @@ class Mybeebotte():
 		if self.no_sensors == 2:
 			data2 = float(data[4])
 			output.append(data2)		
-#		print 'Returning', output, 'with length', len(output)
 		return(output) 
 
 	def write(self, string):
+	# This does not write if not enough time has passed.
 		now = datetime.datetime.now()
 		if ((now - self.last_time) > self.beebotte_interval):
 			self.last_time = now
@@ -63,7 +65,6 @@ class Mybeebotte():
 
 	def read(self, count = 1):
 		bee = self.test_variable.read(limit = 1)[0]
-#		print 'Bee', bee
 		if count == 1:
 			return(bee['data'])
 		if count == 2:
