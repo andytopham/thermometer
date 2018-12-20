@@ -12,10 +12,12 @@ VALUEFILE = '/home/pi/master/thermometer/log/values.log'
 TITLE_ROW = 0
 LABELS_ROW = 1
 VALUES_ROW = 2
-STATUS_ROW = 4
 VALUES_ROW2 = 3
+STATUS_ROW = 4
+CLOCK_ROW = 5
+CLOUD_ROW = 6
 BEEBOTTE_INTERVAL = 60
-BIG_TEXT = True
+BIG_TEXT = False
 
 class Thermometer():
 	def __init__(self):
@@ -64,6 +66,13 @@ class Thermometer():
 			except:
 				self.logger.error('7seg failed init.')
 				sys.exit(0)
+		elif self.displaytype == 'tft':
+			try:
+				import tft
+				self.display = tft.Screen()
+			except:
+				self.logger.error('tft failed init.')
+				sys.exit(0)
 		else:
 			self.logger.error('No display specified.')
 			print 'No display specified'
@@ -92,7 +101,8 @@ class Thermometer():
 		elif self.cloud == 'beebotte':
 			try:
 				import mybeebotte
-				self.myCloud = mybeebotte.Mybeebotte(interval = BEEBOTTE_INTERVAL, no_sensors = 1)
+#				self.myCloud = mybeebotte.Mybeebotte(interval = BEEBOTTE_INTERVAL, no_sensors = 2)
+				self.myCloud = mybeebotte.Mybeebotte(no_sensors = 2)
 				self.display.cloud_type = 'beebotte'
 				print 'Beebotte cloud'
 			except:
@@ -116,7 +126,8 @@ class Thermometer():
 		self.myAlarm = alarm.Alarm()
 		self.mySystem = system.System()
 		hostname = self.mySystem.hostname()
-		self.display.writerow(STATUS_ROW,hostname)
+		self.display.writerow(STATUS_ROW,'Hostname:'+hostname)
+		self.display.writerow(CLOUD_ROW,self.cloud)
 		self.log_counter = 0		
 		self.cloud_counter = 0
 		self.display.writerow(TITLE_ROW, 'Thermometer')
@@ -146,14 +157,18 @@ class Thermometer():
 			else:
 				self.display.cleardisplay()
 			self._toggle_indicator()
-		elif self.displaytype == 'uoled' or self.displaytype == 'uoledi2c':
+		elif self.displaytype == 'uoled' or self.displaytype == 'uoledi2c' or self.displaytype == 'tft':
 			if self.myAlarm.alarm_interval():		# if we should display anything
 				if BIG_TEXT:
 					self.write_single_temperature(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
 				else:
 					self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
+					self.display.writerow(CLOCK_ROW, 'Reading: '+clock+'  ')					
 			else:
 				self.display.cleardisplay()
+#		elif self.displaytype == 'tft':
+#			print 'displaying values...',str(temperature)
+#			self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
 		return(0)
 		
 	def write_temperatures(self, temperature, max, min, cloud, num_devs):
@@ -183,10 +198,13 @@ class Thermometer():
 			string = time.strftime("%R") + ' 0 ' + str(t[1]) + ' 1 ' + str(t[0])
 		if self.myCloud.write(string) == False:
 			print 'Error writing to cloud.'
-			self.display.writerow(LABELS_ROW, 'Error writing to cloud', fontsize='small')
+#			self.display.writerow(LABELS_ROW, 'Error writing to cloud', fontsize='small')
+#			self.display.writerow(LABELS_ROW, 'Error writing to cloud')
 			return(True)
 		else:
 			print 'Wrote to cloud: ', string
+			clock = time.strftime("%R")+' '
+			self.display.writerow(CLOUD_ROW, self.cloud+': '+clock+'  ')					
 			return(False)
 	
 	def _draw_graph(self):
@@ -212,7 +230,8 @@ class Thermometer():
 			time.sleep(5)
 
 if __name__ == "__main__":
-	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.WARNING)
+#	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.WARNING)
+	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO)
 	logging.warning('Running thermometer as a standalone app.')
 
 	print 'Starting thermometer'

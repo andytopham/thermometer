@@ -10,7 +10,7 @@ import logging, datetime
 import keys
 
 LOGFILE = 'log/beebotte.log'
-DEFAULT_INTERVAL = 2		# minutes
+DEFAULT_INTERVAL = 1		# minutes
 
 class Mybeebotte():
 	def __init__(self, interval = DEFAULT_INTERVAL, no_sensors = 1):
@@ -22,7 +22,7 @@ class Mybeebotte():
 			self.test_variable = beebotte.Resource(api,keys.beebotte_channel,keys.beebotte_variable)
 			if no_sensors == 2:
 				self.test_variable2 = beebotte.Resource(api,keys.beebotte_channel,keys.beebotte_variable2)
-			self.logger.info('Beebotte initialised. Interval:'+str(interval)+' Sensors:', str(no_sensors))
+			self.logger.info('Beebotte initialised. Interval:'+str(interval)+' Sensors:'+ str(no_sensors))
 			self.logger.info('Beebotte channel: '+keys.beebotte_channel+' variables: '+keys.beebotte_variable+' '+keys.beebotte_variable2)
 		except:
 			self.logger.error('Beebotte failed to initialise.')
@@ -61,6 +61,8 @@ class Mybeebotte():
 				except:
 					self.logger.warning("Error saving to beebotte. Value="+str(data_pts[0]))				
 					return(False)
+		else:
+			return(False)
 		return(True)
 
 	def read(self, count = 1):

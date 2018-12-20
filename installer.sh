@@ -15,6 +15,12 @@ git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
 cd Adafruit_Python_SSD1306
 sudo python setup.py install
 
+echo 'Installing Adafruit code for controlling ILI9341 tft'
+cd ..
+git clone https://github.com/adafruit/Adafruit_Python_ILI9341.git
+cd Adafruit_Python_ILI9341
+sudo python setup.py install
+
 echo 'Fetching fonts'
 cd /home/pi/master
 mkdir fonts
