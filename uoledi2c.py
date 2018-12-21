@@ -105,7 +105,9 @@ class Screen:
 		self.draw.rectangle((0,height,width,height+ROW_HEIGHT), outline=0, fill=0)	
 		return(0)
 
-	def writerow(self,rownumber, string, fontsize="normal"):
+	def writerow(self,rownumber, string, fontsize="small"):
+		if rownumber > NO_OF_ROWS-1:
+			rownumber = NO_OF_ROWS-1		# crunch all up onto last row
 		self.clear_row(rownumber)
 		if fontsize == "normal":
 			thisfont=self.font

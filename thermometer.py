@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # thermometer.py
-# A thermometer that senses using a DS18B20 and outputs to oled or 7seg display and ubidots cloud.
+# A thermometer that senses using one or more DS18B20.
+# Outputs to oled or 7seg display or tft.
+# Logs data to beebotte or ubidots cloud.
 
-import os, logging, glob, time, sys
+import os, logging, glob, time, sys, datetime
 import alarm, DS18B20, system
 import keys
 # Other imports in code: oled, uoled, sevenseg, dummycloud, myubidots, mybeebotte
@@ -16,7 +18,12 @@ VALUES_ROW2 = 3
 STATUS_ROW = 4
 CLOCK_ROW = 5
 CLOUD_ROW = 6
-BEEBOTTE_INTERVAL = 60
+CLOUD_ROW2 = 7
+CLOUD_ROW3 = 8
+CLOUD_ROW4 = 9
+CLOUD_INTERVAL = 60		# minutes (set in beebotte class)
+#CLOUD_INTERVAL = 1		# minutes (set in beebotte class)
+READING_INTERVAL = 15		# seconds (used in main loop)
 BIG_TEXT = False
 
 class Thermometer():
@@ -101,9 +108,9 @@ class Thermometer():
 		elif self.cloud == 'beebotte':
 			try:
 				import mybeebotte
-#				self.myCloud = mybeebotte.Mybeebotte(interval = BEEBOTTE_INTERVAL, no_sensors = 2)
-				self.myCloud = mybeebotte.Mybeebotte(no_sensors = 2)
+				self.myCloud = mybeebotte.Mybeebotte( no_sensors = 2)
 				self.display.cloud_type = 'beebotte'
+				self.display.writerow(CLOUD_ROW4, keys.beebotte_variable+' '+keys.beebotte_variable2)
 				print 'Beebotte cloud'
 			except:
 				self.display.writerow(TITLE_ROW,"Beebotte failed init")
@@ -166,9 +173,6 @@ class Thermometer():
 					self.display.writerow(CLOCK_ROW, 'Reading: '+clock+'  ')					
 			else:
 				self.display.cleardisplay()
-#		elif self.displaytype == 'tft':
-#			print 'displaying values...',str(temperature)
-#			self.write_temperatures(temperature, self.myDS.max_temp, self.myDS.min_temp, self.cloud_error, self.myDS.no_devices)				
 		return(0)
 		
 	def write_temperatures(self, temperature, max, min, cloud, num_devs):
@@ -184,27 +188,25 @@ class Thermometer():
 		self.display.writerow(TITLE_ROW, string)
 		string = "Cloud = "+self.cloud+time.strftime(" %R ")
 		self.display.writerow(LABELS_ROW, string, fontsize="small")
-#		if num_devs > 1:
-#			string = '{0:2.1f}C {1:2.1f}C {2:2.1f}C  '.format(min[1], temperature[1], max[1])
-#			self.display.writerow(VALUES_ROW2, string)			
 		return(0)
 		
 	def _cloud_log(self, t):
-#		self.cloud_counter += 1
-#		print 'Cloud counter = ',self.cloud_counter
+		self.cloud_counter += 1
 		if self.myDS.no_devices == 1:
 			string = time.strftime("%R") + ' 0 ' + str(t[0])
 		else:
 			string = time.strftime("%R") + ' 0 ' + str(t[1]) + ' 1 ' + str(t[0])
 		if self.myCloud.write(string) == False:
-			print 'Error writing to cloud.'
-#			self.display.writerow(LABELS_ROW, 'Error writing to cloud', fontsize='small')
-#			self.display.writerow(LABELS_ROW, 'Error writing to cloud')
+			print 'Error writing value to cloud.'
+			self.logger.error('Error writing value to cloud')
+			self.display.writerow(CLOUD_ROW2, 'Error writing value to cloud')
 			return(True)
 		else:
 			print 'Wrote to cloud: ', string
+			self.logger.info('Number of values written to cloud:'+str(self.cloud_counter))
 			clock = time.strftime("%R")+' '
 			self.display.writerow(CLOUD_ROW, self.cloud+': '+clock+'  ')					
+			self.display.writerow(CLOUD_ROW3, 'Cloud count:'+str(self.cloud_counter))
 			return(False)
 	
 	def _draw_graph(self):
@@ -222,19 +224,43 @@ class Thermometer():
 	
 	def mainloop(self):
 		t = [None]*2
+		now = datetime.datetime.now()
+		self.last_time = now
+		self.beebotte_interval = datetime.timedelta(minutes = CLOUD_INTERVAL)
 		while True:
 			for device in range(self.myDS.no_devices):
-				t[device] = self.read_temperature(device)
-			self.display.cloud_error = self._cloud_log(t)
-			self._update_display(t)
-			time.sleep(5)
+				try:
+					t[device] = self.read_temperature(device)
+				except:
+					print 'Error reading temperature'
+					self.logger.error('Error reading temperature')	
+					time.sleep(15)		# give it some time to recover
+					continue			# next loop iteration
+			now = datetime.datetime.now()
+			if ((now - self.last_time) > self.beebotte_interval):
+				self.last_time = now
+				try:
+					if self._cloud_log(t):
+						print 'Wrote to cloud'
+						self.logger.info('Wrote to cloud')			
+				except:
+					print 'Error writing to cloud'
+					self.logger.error('Error writing to cloud')			
+			try:
+				self._update_display(t)
+			except:
+				print 'Error updating display'
+				self.logger.error('Error updating display')
+			time.sleep(READING_INTERVAL)
 
 if __name__ == "__main__":
 #	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.WARNING)
-	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO)
+	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO,format='%(asctime)s:%(message)s')
 	logging.warning('Running thermometer as a standalone app.')
 
 	print 'Starting thermometer'
 	myThermometer = Thermometer()
 	myThermometer.mainloop()
+	logging.shutdown()
+	
 	

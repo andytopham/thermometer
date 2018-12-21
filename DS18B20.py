@@ -26,7 +26,7 @@ class DS18B20():
 			self.device_file.append(dev_file)
 		for i in range(self.no_devices):
 			temperature = self.read_temp(i)	
-			print i, temperature
+#			print i, temperature
 			self.min_temp.append(temperature)
 			self.max_temp.append(temperature)
 		self.logger.info('Temperature sensor initialised.')
