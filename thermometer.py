@@ -225,8 +225,8 @@ class Thermometer():
 	def mainloop(self):
 		t = [None]*2
 		now = datetime.datetime.now()
-		self.last_time = now
 		self.beebotte_interval = datetime.timedelta(minutes = CLOUD_INTERVAL)
+		self.last_time = now - self.beebotte_interval		# to make sure we get an instant reading
 		while True:
 			for device in range(self.myDS.no_devices):
 				try:
