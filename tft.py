@@ -8,9 +8,10 @@
 # Need to install this for the Image libs...
 #   sudo apt-get install python-imaging
 
-import Image
-import ImageDraw
-import ImageFont
+# Latest addition is to add "from PIL" to the next three lines.
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 
 import time
 import Adafruit_ILI9341 as TFT
@@ -196,8 +197,8 @@ class Screen(threading.Thread):
 		for i in range(3,self.rowcount-2):
 			self.writerow(i, 'Row '+str(i), True)	
 		while True:
-			date_now = time.strftime("%b %d %Y ", time.gmtime())
-			time_now = time.strftime("%H:%M:%S", time.gmtime())
+			date_now = time.strftime("%b %d %Y ", time.localtime())
+			time_now = time.strftime("%H:%M:%S", time.localtime())
 			self.writerow(1, time_now+' ', True)	
 			self.writerow(2, date_now, True)	
 			if GPIO.input(L_BUTTON):

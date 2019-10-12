@@ -2,13 +2,28 @@
 echo "****** andyt installer for thermometer **********"
 apt-get update
 apt-get -y install python-dev python-smbus python-setuptools python-pip
-apt-get -y install build-essential python-imaging
+apt-get -y install build-essential 
+# apt-get python-imaging
 pip install logging ubidots RPi.GPIO
 pip install beebotte
 
+echo "Setting up pillow, python graphics."
+apt-get install libjpeg-dev -y
+apt-get install zlib1g-dev -y
+apt-get install libfreetype6-dev -y
+apt-get install liblcms1-dev -y
+apt-get install libopenjp2-7 -y
+apt-get install libtiff5 -y
+apt-get install python3-setuptools
+
+# numpy needed for Adafruit ILI9341
+pip install numpy
+apt-get install python-pil
+# Adafruit seems to still use pil, even though this has been superceeded by pillow
+# pip install pillow
+
 mkdir log
-echo 'Setting up sensor comms.'
-echo 'dtoverlay=w1-gpio' >> /boot/config.txt
+
 
 echo 'Installing adafruit SSD1306'
 git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
@@ -34,6 +49,8 @@ chmod 644 /lib/systemd/system/startthermometer.service
 systemctl daemon-reload
 systemctl enable startthermometer.service
 
+echo 'Setting up sensor comms.'
+# echo 'dtoverlay=w1-gpio' >> /boot/config.txt
 cat "dtoverlay=w1-gpio,gpiopin=4,pullup=on" >> /boot/config.txt
 
 echo 'And need to reboot'
