@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# ' This needs updating to version in keyb repository.'
 ''' Module to control the picaxe OLED.
   Updated to work with both 16x2 and 20x4 versions.
   Requires new picaxe fw that inverts serial polarity, i.e. N2400 -> T2400.
