@@ -1,4 +1,4 @@
-# This is the autostart file for the thermometer app. Controls systemd.
+# This is the autostart file for the tft clock app. Controls systemd.
 # Permissions need to be 644
 # Needs to be stored in /lib/systemd/system
 # Commands to load it....
@@ -7,15 +7,15 @@
 #  sudo reboot
 #  sudo systemctl status myweather.service  -- just to check its running
 
-
 [Unit]
-Description=My thermometer Service
+Description=My tft clock Service
 After=network.target
 
 [Service]
 Type=idle
-WorkingDirectory=/home/pi/master/test
-ExecStart=/usr/bin/python3 /home/pi/master/test/thermometer.py > /home/pi/master/test/log/thermometer.log 2>&1
+ExecStart=/usr/bin/python3 /home/pi/master/tft/newtft.py > /home/pi/master/tft/log/newtft.log 2>&1
+# Restart=always
+Restart=no
 User=pi
 
 [Install]

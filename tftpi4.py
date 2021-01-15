@@ -1,5 +1,7 @@
 #!/usr/bin/python
-# tft.py
+# tftpi4.py
+# Updated for the lcd on the front of the pi4 box. Wiki for this display...
+# http://www.lcdwiki.com/MHS-3.5inch_RPi_Display
 # My routines for writing to the 2.2" TFT.
 # This calls on info from Adafruit at:
 # https://github.com/adafruit/Adafruit_Python_ILI9341
@@ -21,17 +23,16 @@ import RPi.GPIO as GPIO
 import threading, Queue
 
 # Setup which pins we are using to control the oled
-RST = 23
-DC    = 17
-LED = 12
+RST = 25	# 23.  Pin22=BCM25
+DC    = 24	# 18.  Pin18=BCM24
 SPI_PORT = 0
 SPI_DEVICE = 0
 # Using a 5x8 font
 FONT_DIR = '/home/pi/master/fonts/'
 ROW_HEIGHT = 8
-ROW_LENGTH = 10				# 20 is normal
-DEFAULT_FONT_SIZE = 64		# 24 is normal
-NO_OF_ROWS = 4				# 12 is normal
+ROW_LENGTH = 20
+DEFAULT_FONT_SIZE = 24
+NO_OF_ROWS = 12
 ROW_LENGTH = 17
 LAST_PROG_ROW = 5
 BIG_ROW = 1
@@ -43,10 +44,9 @@ RED = (255,0,0)
 YELLOW = (255,255,0)
 BLACK = (0,0,0)
 BLUE = (0,0,255)
-TESTING = True
 
 class Screen(threading.Thread):
-	def __init__(self, rowcount = NO_OF_ROWS, rowlength = ROW_LENGTH, rotation = 90):
+	def __init__(self, rowcount = NO_OF_ROWS, rowlength = ROW_LENGTH, rotation = 0):
 		self.Event = threading.Event()
 		self.threadLock = threading.Lock()
 		threading.Thread.__init__(self, name='mytft')
@@ -66,25 +66,19 @@ class Screen(threading.Thread):
 		self.font = [ImageFont.load_default() for i in range(self.rowcount)]
 		self.fontsize = [DEFAULT_FONT_SIZE for i in range(self.rowcount)]
 #		self.fontsize[BIG_ROW] = 36
-		if TESTING:
-			self.fontsize[2] = 24
-			self.fontsize[3] = 24
 		for i in range(self.rowcount):
 			self.font[i] = ImageFont.truetype(FONT_DIR+'Hack-Regular.ttf',self.fontsize[i])
 		# setup row colours
 		self.rowcolour = [WHITE for i in range(self.rowcount)]			# set the defaults
 		self.rowcolour[0] = YELLOW
-#		self.rowcolour[self.rowcount-1] = BLUE
+		self.rowcolour[self.rowcount-1] = BLUE
 		self.calc_offsets()
 		GPIO.setmode(GPIO.BCM)
-		GPIO.setup(LED,GPIO.OUT)
-		pi_pwm=GPIO.PWM(LED,100)		# pin number, frquency
-		pi_pwm.start(100)				# duty cycle
 		GPIO.setup(L_BUTTON, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 		GPIO.setup(R_BUTTON, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 		
 	def run(self):
-		print ('Starting tft queue manager.')
+		print 'Starting tft queue manager.'
 		myevent = False
 		while not myevent:
 			while not self.q.empty():
@@ -92,7 +86,7 @@ class Screen(threading.Thread):
 				self.writerow(entry[0], entry[1])	
 				self.q.task_done()
 			myevent = self.Event.wait(.5)	# wait for this timeout or the flag being set.
-		print ('Tft exiting')
+		print 'Tft exiting'
 		
 	def clear(self):
 #		self.led.clear_display() # This clears the display but only when there is a led.display() as well!
@@ -198,31 +192,26 @@ class Screen(threading.Thread):
 			self.display()
 			time.sleep(1)
 			
-	def button_test(self):
-		if GPIO.input(L_BUTTON):
-			self.writerow(self.rowcount-2, 'Left button true', True)
-		else:
-			self.writerow(self.rowcount-2, 'Left button false', True)
-		if GPIO.input(R_BUTTON):
-			self.writerow(self.rowcount-1, 'Right button true', True)
-		else:
-			self.writerow(self.rowcount-1, 'Right button false', True)
-#			self.display()
-	
-	
 	def show_time(self):
 #			date_now = '{:<18}'.format(time.strftime("%b %d %Y ", time.gmtime()))
 #			time_now = '{:<8}'.format(time.strftime("%H:%M:%S", time.gmtime()))
-#		self.writerow(0, 'TFT self test running...', True)	
+		self.writerow(0, 'TFT self test running...', True)	
 		for i in range(3,self.rowcount-2):
 			self.writerow(i, 'Row '+str(i), True)	
 		while True:
 			date_now = time.strftime("%b %d %Y ", time.localtime())
 			time_now = time.strftime("%H:%M:%S", time.localtime())
-			self.writerow(1, time_now, True)	
-			self.writerow(3, date_now, True)
-#			self.button_test()
-			time.sleep(1)
+			self.writerow(1, time_now+' ', True)	
+			self.writerow(2, date_now, True)	
+			if GPIO.input(L_BUTTON):
+				self.writerow(self.rowcount-2, 'Left button true', True)
+			else:
+				self.writerow(self.rowcount-2, 'Left button false', True)
+			if GPIO.input(R_BUTTON):
+				self.writerow(self.rowcount-1, 'Right button true', True)
+			else:
+				self.writerow(self.rowcount-1, 'Right button false', True)
+#			self.display()
 		return(0)
 	
 	def display(self):
@@ -230,7 +219,7 @@ class Screen(threading.Thread):
 		return(0)
 
 if __name__ == "__main__":
-	print ('TFT test 1')		
+	print 'TFT test'		
 	myScreen = Screen()
 	dir(myScreen)
 	myScreen.show_time()

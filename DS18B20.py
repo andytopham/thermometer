@@ -7,26 +7,27 @@
 
 import logging, os, glob, time
 
+PATH = '/home/pi/master/tft/'
 LOGFILE = 'log/DS18B20.log'
 
 class DS18B20():
 	def __init__(self):
 		self.logger = logging.getLogger(__name__)
-		os.system('modprobe w1-gpio')
-		os.system('modprobe w1-therm')
+#		os.system('modprobe w1-gpio')
+#		os.system('modprobe w1-therm')
 		base_dir = '/sys/bus/w1/devices/'
 		self.device_file = []
 		self.min_temp = []
 		self.max_temp = []
 		folders = glob.glob(base_dir + '28*')
 		self.no_devices = len(folders)
-		print 'Found ',self.no_devices, ' DS18B20 devices'
+		print ( 'Found ',self.no_devices, ' DS18B20 devices')
 		for dev in folders:
 			dev_file = dev + '/w1_slave'
 			self.device_file.append(dev_file)
 		for i in range(self.no_devices):
 			temperature = self.read_temp(i)	
-#			print i, temperature
+#			print ( i, temperature)
 			self.min_temp.append(temperature)
 			self.max_temp.append(temperature)
 		self.logger.info('Temperature sensor initialised.')
@@ -66,10 +67,10 @@ class DS18B20():
 		return(temperature)
 	
 if __name__ == "__main__":
-	logging.basicConfig(filename=LOGFILE,filemode='w',level=logging.INFO)
+	logging.basicConfig(filename=PATH+LOGFILE,filemode='w',level=logging.WARNING)
 	logging.warning('Running DS18B20 as a standalone app.')
 	myReader = DS18B20()
-#	print myReader.read_max_min_temp()
-#	print 'min=',myReader.min_temp, 'max=',myReader.max_temp
+#	print ( myReader.read_max_min_temp())
+#	print ( 'min=',myReader.min_temp, 'max=',myReader.max_temp)
 	
 	
